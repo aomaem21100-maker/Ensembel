@@ -1,12 +1,9 @@
 from pathlib import Path
 import pickle
-import joblib  # เพิ่ม joblib สำหรับโหลดโมเดล scikit-learn
+import joblib
 
 import pandas as pd
 import streamlit as st
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
 
 
 BASE_PATH = Path(__file__).parent
@@ -79,9 +76,8 @@ st.markdown(
 
 @st.cache_resource
 def load_model():
-    """โหลดไฟล์ทั้ง 4 แล้วประกอบเป็น pipeline + metadata"""
+    """โหลดไฟล์และตรวจสอบโครงสร้าง"""
     
-    # ตรวจสอบว่ามีไฟล์ครบหรือไม่
     missing_files = []
     if not MODEL_PATH.exists():
         missing_files.append("rf_model.pkl")
@@ -98,41 +94,31 @@ def load_model():
             "กรุณาวางไฟล์ทั้งหมดไว้ในโฟลเดอร์เดียวกับ app.py"
         )
 
-    # ใช้ joblib โหลดโมเดลและ scaler (เพราะ scikit-learn นิยมใช้ joblib)
+    # โหลดไฟล์ทั้งหมด
     with open(MODEL_PATH, "rb") as f:
         model = joblib.load(f)
 
     with open(SCALER_PATH, "rb") as f:
         scaler = joblib.load(f)
 
-    # ใช้ pickle โหลด list ชื่อ features และ target (ปกติ save ด้วย pickle)
     with open(FEATURE_NAMES_PATH, "rb") as f:
         feature_columns = pickle.load(f)
 
     with open(TARGET_NAMES_PATH, "rb") as f:
         class_names = pickle.load(f)
 
-    # แยก numeric (4 ตัวแรก) / categorical (2 ตัวหลัง)
-    numeric_features = feature_columns[:4]
-    categorical_features = feature_columns[4:]
-
-    # ประกอบ ColumnTransformer ใช้ scaler ที่มีอยู่แล้ว
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", scaler, numeric_features),
-            (
-                "cat",
-                OneHotEncoder(handle_unknown="ignore"),
-                categorical_features,
-            ),
-        ],
-        remainder="drop",
-    )
-
-    pipeline = Pipeline([
-        ("preprocessor", preprocessor),
-        ("classifier", model),
-    ])
+    # ตรวจสอบว่า model เป็น Pipeline ที่ fit แล้วหรือไม่
+    if hasattr(model, 'predict') and hasattr(model, 'transform'):
+        # เป็น Pipeline ทั้งชุด ใช้ได้เลย
+        pipeline = model
+        st.info(f"โหลด Pipeline ทั้งชุดสำเร็จ (steps: {[name for name, _ in model.steps]})")
+    else:
+        # เป็นแค่ classifier ต้องประกอบ pipeline เอง
+        # แต่ต้อง fit ColumnTransformer ก่อน
+        raise ValueError(
+            f"rf_model.pkl เป็น {type(model).__name__} ไม่ใช่ Pipeline ที่ fit แล้ว "
+            "กรุณาตรวจสอบไฟล์โมเดล"
+        )
 
     metadata = {
         "metrics": {"accuracy": 0.0, "roc_auc": 0.0},
@@ -140,13 +126,14 @@ def load_model():
         "class_names": class_names,
     }
 
-    return {"pipeline": pipeline, "metadata": metadata}
+    return {"pipeline": pipeline, "metadata": metadata, "model_type": type(model).__name__}
 
 
 try:
     model_bundle = load_model()
     pipeline = model_bundle["pipeline"]
     metadata = model_bundle["metadata"]
+    st.sidebar.write(f"โมเดลประเภท: **{model_bundle['model_type']}**")
 except Exception as error:
     st.error(f"ไม่สามารถโหลดโมเดลได้: {error}")
     st.stop()
