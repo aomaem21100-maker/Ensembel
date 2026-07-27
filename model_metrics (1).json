@@ -1,0 +1,16 @@
+{
+  "accuracy": 0.7375,
+  "roc_auc": 0.7110215053763441,
+  "confusion_matrix": [
+    [
+      14,
+      22
+    ],
+    [
+      20,
+      104
+    ]
+  ],
+  "train_rows": 640,
+  "test_rows": 160
+}
