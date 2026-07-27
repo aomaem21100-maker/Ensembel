@@ -1,252 +1,367 @@
-import streamlit as st
+from pathlib import Path
+import pickle
+
 import pandas as pd
-import numpy as np
-import joblib
-import plotly.graph_objects as go
+import streamlit as st
 
-# ============================================
-# Page Configuration
-# ============================================
+
+MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
+
 st.set_page_config(
-    page_title="Iris Flower Predictor",
-    page_icon="🌸",
+    page_title="Random Forest Predictor",
+    page_icon="🌱",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-# ============================================
-# Custom CSS (Minimalist & Beautiful)
-# ============================================
-st.markdown("""
-<style>
-    /* Main background */
-    .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-    }
-    /* Title styling */
-    .main-title {
-        font-family: 'Helvetica Neue', sans-serif;
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #2c3e50;
-        text-align: center;
-        margin-bottom: 0.2rem;
-    }
-    .sub-title {
-        text-align: center;
-        color: #7f8c8d;
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-    /* Metric card */
-    .metric-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        text-align: center;
-        transition: transform 0.3s ease;
-    }
-    .metric-card:hover {
-        transform: translateY(-3px);
-    }
-    .metric-label {
-        color: #95a5a6;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #2c3e50;
-        margin: 0.5rem 0;
-    }
-    /* Prediction result */
-    .prediction-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 20px;
-        text-align: center;
-        color: white;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-    }
-    .prediction-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        letter-spacing: 2px;
-    }
-    .prediction-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0.5rem 0;
-    }
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background: white;
-    }
-    .stSlider > div > div {
-        color: #2c3e50 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ============================================
-# Load Model
-# ============================================
-@st.cache_resource
-def load_artifacts():
-    model = joblib.load('rf_model.pkl')
-    scaler = joblib.load('scaler.pkl')
-    features = joblib.load('feature_names.pkl')
-    targets = joblib.load('target_names.pkl')
-    return model, scaler, features, targets
-
-model, scaler, features, targets = load_artifacts()
-
-# ============================================
-# Header
-# ============================================
-st.markdown('<p class="main-title">🌸 Iris Flower Predictor</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Predict the species of iris flower using Random Forest</p>', unsafe_allow_html=True)
-
-# ============================================
-# Sidebar - Input Features
-# ============================================
-with st.sidebar:
-    st.header("🎛️ Flower Parameters")
-    st.markdown("---")
-    
-    sepal_length = st.slider("Sepal Length (cm)", 4.0, 8.0, 5.5, 0.1)
-    sepal_width = st.slider("Sepal Width (cm)", 2.0, 4.5, 3.0, 0.1)
-    petal_length = st.slider("Petal Length (cm)", 1.0, 7.0, 4.0, 0.1)
-    petal_width = st.slider("Petal Width (cm)", 0.1, 2.5, 1.3, 0.1)
-    
-    st.markdown("---")
-    predict_btn = st.button("🔮 Predict Now", use_container_width=True, type="primary")
-
-# ============================================
-# Prediction
-# ============================================
-if predict_btn:
-    # Prepare input
-    input_data = np.array([[sepal_length, sepal_width, petal_length, petal_width]])
-    input_scaled = scaler.transform(input_data)
-    
-    # Predict
-    prediction = model.predict(input_scaled)[0]
-    probabilities = model.predict_proba(input_scaled)[0]
-    predicted_species = targets[prediction]
-    confidence = probabilities[prediction] * 100
-    
-    # Display Prediction Result
-    st.markdown("### 🎯 Prediction Result")
-    st.markdown(f"""
-    <div class="prediction-box">
-        <div class="prediction-label">PREDICTED SPECIES</div>
-        <div class="prediction-value">{predicted_species.replace('_', ' ').title()}</div>
-        <div>Confidence: {confidence:.2f}%</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Metrics Row
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Sepal</div>
-            <div class="metric-value">{sepal_length} × {sepal_width}</div>
-            <div style="color:#95a5a6;font-size:0.85rem;">length × width (cm)</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Petal</div>
-            <div class="metric-value">{petal_length} × {petal_width}</div>
-            <div style="color:#95a5a6;font-size:0.85rem;">length × width (cm)</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-label">Confidence</div>
-            <div class="metric-value">{confidence:.1f}%</div>
-            <div style="color:#95a5a6;font-size:0.85rem;">model certainty</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Probability Chart
-    col_a, col_b = st.columns([1.3, 1])
-    
-    with col_a:
-        st.markdown("### 📊 Probability Distribution")
-        fig = go.Figure(data=[
-            go.Bar(
-                x=[t.replace('_', ' ').title() for t in targets],
-                y=probabilities * 100,
-                marker_color=['#667eea' if i == prediction else '#dfe6e9' for i in range(len(targets))],
-                text=[f"{p*100:.1f}%" for p in probabilities],
-                textposition='auto'
-            )
-        ])
-        fig.update_layout(
-            yaxis_title="Probability (%)",
-            xaxis_title="Species",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            height=350,
-            margin=dict(l=20, r=20, t=20, b=20)
-        )
-        fig.update_yaxes(showgrid=True, gridcolor='#ecf0f1')
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col_b:
-        st.markdown("### 🌟 Feature Importance")
-        importances = model.feature_importances_
-        fig2 = go.Figure(data=[
-            go.Bar(
-                y=[f.replace(' (cm)', '') for f in features],
-                x=importances,
-                orientation='h',
-                marker_color='#764ba2',
-                text=[f"{i*100:.1f}%" for i in importances],
-                textposition='auto'
-            )
-        ])
-        fig2.update_layout(
-            xaxis_title="Importance",
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-            height=350,
-            margin=dict(l=20, r=20, t=20, b=20)
-        )
-        fig2.update_xaxes(showgrid=True, gridcolor='#ecf0f1')
-        st.plotly_chart(fig2, use_container_width=True)
-
-else:
-    # Welcome screen
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.info("""
-        👈 **Adjust the flower parameters** in the sidebar and click **"Predict Now"** to see the prediction.
-        
-        **Features:**
-        - 🌿 Sepal Length & Width
-        - 🌸 Petal Length & Width
-        - 🎯 Species Classification (Setosa / Versicolor / Virginica)
-        """)
-
-# Footer
-st.markdown("---")
 st.markdown(
-    "<div style='text-align:center;color:#95a5a6;font-size:0.85rem;'>"
-    "Built with ❤️ using Streamlit + Random Forest | © 2026"
-    "</div>",
-    unsafe_allow_html=True
+    """
+    <style>
+        .block-container {
+            max-width: 1120px;
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+        }
+
+        .hero {
+            padding: 1.6rem 1.7rem;
+            border-radius: 20px;
+            border: 1px solid rgba(128, 128, 128, 0.22);
+            background: linear-gradient(
+                135deg,
+                rgba(56, 142, 60, 0.09),
+                rgba(255, 255, 255, 0.02)
+            );
+            margin-bottom: 1.2rem;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+            margin: 0 0 0.35rem 0;
+        }
+
+        .hero p {
+            margin: 0;
+            opacity: 0.78;
+        }
+
+        .soft-card {
+            padding: 1.2rem 1.3rem;
+            border: 1px solid rgba(128, 128, 128, 0.22);
+            border-radius: 17px;
+            margin-top: 1rem;
+        }
+
+        div[data-testid="stMetric"] {
+            border: 1px solid rgba(128, 128, 128, 0.18);
+            border-radius: 14px;
+            padding: 0.8rem;
+        }
+
+        .small-note {
+            font-size: 0.9rem;
+            opacity: 0.70;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
+
+
+@st.cache_resource
+def load_model():
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"ไม่พบไฟล์ {MODEL_PATH.name} "
+            "กรุณาวางไฟล์โมเดลไว้ในโฟลเดอร์เดียวกับ app.py"
+        )
+
+    # โหลดเฉพาะไฟล์ .pkl ที่สร้างจากแหล่งที่เชื่อถือได้
+    with open(MODEL_PATH, "rb") as file:
+        return pickle.load(file)
+
+
+try:
+    model_bundle = load_model()
+    pipeline = model_bundle["pipeline"]
+    metadata = model_bundle["metadata"]
+except Exception as error:
+    st.error(f"ไม่สามารถโหลดโมเดลได้: {error}")
+    st.stop()
+
+
+st.markdown(
+    """
+    <div class="hero">
+        <h1>🌱 Random Forest Predictor</h1>
+        <p>
+            เว็บตัวอย่างสำหรับทำนายแนวโน้มการสอบผ่าน
+            ด้วย Ensemble Learning และ Data Preprocessing Pipeline
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.sidebar:
+    st.header("ข้อมูลโมเดล")
+    st.write("อัลกอริทึม: **Random Forest**")
+    st.write("ประเภทงาน: **Classification**")
+
+    model_metrics = metadata.get("metrics", {})
+    st.metric(
+        "Test Accuracy",
+        f"{model_metrics.get('accuracy', 0):.2%}",
+    )
+    st.metric(
+        "Test ROC-AUC",
+        f"{model_metrics.get('roc_auc', 0):.3f}",
+    )
+
+    st.divider()
+    st.caption(
+        "โมเดลและข้อมูลนี้จัดทำเพื่อเป็นตัวอย่างการเรียนรู้ "
+        "ไม่ควรใช้ตัดสินนักเรียนจริงโดยไม่มีการตรวจสอบเพิ่มเติม"
+    )
+
+
+single_tab, batch_tab, process_tab = st.tabs(
+    [
+        "ทำนายรายบุคคล",
+        "ทำนายจาก CSV",
+        "ขั้นตอนของโมเดล",
+    ]
+)
+
+
+with single_tab:
+    st.subheader("กรอกข้อมูลสำหรับการทำนาย")
+
+    with st.form("single_prediction_form"):
+        left_column, right_column = st.columns(2)
+
+        with left_column:
+            study_hours = st.number_input(
+                "ชั่วโมงอ่านหนังสือต่อวัน",
+                min_value=0.0,
+                max_value=12.0,
+                value=4.0,
+                step=0.5,
+            )
+
+            attendance_percent = st.number_input(
+                "เปอร์เซ็นต์การเข้าเรียน",
+                min_value=0.0,
+                max_value=100.0,
+                value=85.0,
+                step=1.0,
+            )
+
+            assignment_score = st.number_input(
+                "คะแนนงานหรือการบ้าน",
+                min_value=0.0,
+                max_value=100.0,
+                value=75.0,
+                step=1.0,
+            )
+
+        with right_column:
+            previous_gpa = st.number_input(
+                "เกรดเฉลี่ยเดิม",
+                min_value=0.0,
+                max_value=4.0,
+                value=2.75,
+                step=0.05,
+            )
+
+            internet_access = st.selectbox(
+                "มีอินเทอร์เน็ตสำหรับการเรียนหรือไม่",
+                options=["Yes", "No"],
+                format_func=lambda value: "มี" if value == "Yes" else "ไม่มี",
+            )
+
+            tutoring = st.selectbox(
+                "เข้าร่วมการสอนเสริมหรือไม่",
+                options=["Yes", "No"],
+                format_func=lambda value: (
+                    "เข้าร่วม" if value == "Yes" else "ไม่เข้าร่วม"
+                ),
+            )
+
+        predict_button = st.form_submit_button(
+            "ทำนายผล",
+            type="primary",
+            use_container_width=True,
+        )
+
+    if predict_button:
+        input_data = pd.DataFrame(
+            [{
+                "study_hours": study_hours,
+                "attendance_percent": attendance_percent,
+                "assignment_score": assignment_score,
+                "previous_gpa": previous_gpa,
+                "internet_access": internet_access,
+                "tutoring": tutoring,
+            }]
+        )
+
+        prediction = int(pipeline.predict(input_data)[0])
+        probabilities = pipeline.predict_proba(input_data)[0]
+
+        fail_probability = float(probabilities[0])
+        pass_probability = float(probabilities[1])
+        prediction_label = metadata["class_names"][prediction]
+
+        st.markdown('<div class="soft-card">', unsafe_allow_html=True)
+
+        if prediction == 1:
+            st.success(f"ผลการทำนาย: **{prediction_label}**")
+        else:
+            st.warning(f"ผลการทำนาย: **{prediction_label}**")
+
+        metric_left, metric_right = st.columns(2)
+
+        metric_left.metric(
+            "ความน่าจะเป็นที่จะผ่าน",
+            f"{pass_probability:.1%}",
+        )
+
+        metric_right.metric(
+            "ความน่าจะเป็นที่จะไม่ผ่าน",
+            f"{fail_probability:.1%}",
+        )
+
+        st.progress(pass_probability)
+
+        st.markdown(
+            """
+            <p class="small-note">
+                ข้อมูลจะผ่านขั้นตอนเติมค่าที่หาย ปรับมาตรฐาน
+                และแปลงข้อมูลหมวดหมู่โดยอัตโนมัติก่อนเข้าสู่ Random Forest
+            </p>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+with batch_tab:
+    st.subheader("ทำนายข้อมูลหลายรายการ")
+
+    csv_template = pd.DataFrame(
+        [{
+            "study_hours": 4.0,
+            "attendance_percent": 85.0,
+            "assignment_score": 75.0,
+            "previous_gpa": 2.75,
+            "internet_access": "Yes",
+            "tutoring": "No",
+        }]
+    )
+
+    st.download_button(
+        label="ดาวน์โหลดไฟล์ CSV ตัวอย่าง",
+        data=csv_template.to_csv(index=False).encode("utf-8-sig"),
+        file_name="prediction_template.csv",
+        mime="text/csv",
+    )
+
+    uploaded_file = st.file_uploader(
+        "อัปโหลดไฟล์ CSV",
+        type=["csv"],
+        help="ชื่อคอลัมน์ต้องตรงกับไฟล์ตัวอย่าง",
+    )
+
+    if uploaded_file is not None:
+        try:
+            batch_data = pd.read_csv(uploaded_file)
+
+            required_columns = metadata["feature_columns"]
+            missing_columns = [
+                column
+                for column in required_columns
+                if column not in batch_data.columns
+            ]
+
+            if missing_columns:
+                st.error(
+                    "ไฟล์ขาดคอลัมน์ต่อไปนี้: "
+                    + ", ".join(missing_columns)
+                )
+            else:
+                model_input = batch_data[required_columns].copy()
+
+                batch_predictions = pipeline.predict(model_input)
+                batch_probabilities = pipeline.predict_proba(model_input)[:, 1]
+
+                result_data = batch_data.copy()
+                result_data["prediction"] = batch_predictions
+                result_data["prediction_label"] = [
+                    metadata["class_names"][int(value)]
+                    for value in batch_predictions
+                ]
+                result_data["pass_probability"] = batch_probabilities.round(4)
+
+                st.success(
+                    f"ทำนายสำเร็จทั้งหมด {len(result_data):,} รายการ"
+                )
+
+                st.dataframe(
+                    result_data,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+                st.download_button(
+                    label="ดาวน์โหลดผลการทำนาย",
+                    data=result_data.to_csv(index=False).encode("utf-8-sig"),
+                    file_name="random_forest_predictions.csv",
+                    mime="text/csv",
+                    type="primary",
+                )
+
+        except Exception as error:
+            st.error(f"ไม่สามารถประมวลผลไฟล์ได้: {error}")
+
+
+with process_tab:
+    st.subheader("กระบวนการทำงานของระบบ")
+
+    st.markdown(
+        """
+        **1. Numeric Data Preprocessing**
+
+        - เติมค่าที่หายด้วยค่ามัธยฐาน
+        - Transform ด้วย StandardScaler
+
+        **2. Categorical Data Preprocessing**
+
+        - เติมค่าที่หายด้วยค่าที่พบบ่อยที่สุด
+        - Transform ด้วย One-Hot Encoding
+
+        **3. Prediction**
+
+        - ส่งข้อมูลที่แปลงแล้วเข้าสู่ Random Forest
+        - แสดงคลาสที่ทำนายและค่าความน่าจะเป็น
+        """
+    )
+
+    schema = pd.DataFrame(
+        [
+            ["study_hours", "ตัวเลข", "ชั่วโมงอ่านหนังสือต่อวัน"],
+            ["attendance_percent", "ตัวเลข", "เปอร์เซ็นต์การเข้าเรียน"],
+            ["assignment_score", "ตัวเลข", "คะแนนงานหรือการบ้าน"],
+            ["previous_gpa", "ตัวเลข", "เกรดเฉลี่ยเดิม 0–4"],
+            ["internet_access", "หมวดหมู่", "Yes หรือ No"],
+            ["tutoring", "หมวดหมู่", "Yes หรือ No"],
+        ],
+        columns=["ชื่อคอลัมน์", "ชนิดข้อมูล", "คำอธิบาย"],
+    )
+
+    st.dataframe(
+        schema,
+        use_container_width=True,
+        hide_index=True,
+    )
