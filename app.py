@@ -3,9 +3,17 @@ import pickle
 
 import pandas as pd
 import streamlit as st
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 
 
-MODEL_PATH = Path(__file__).with_name("rf_model.pkl")
+BASE_PATH = Path(__file__).parent
+
+MODEL_PATH = BASE_PATH / "rf_model.pkl"
+SCALER_PATH = BASE_PATH / "scaler.pkl"
+FEATURE_NAMES_PATH = BASE_PATH / "feature_names.pkl"
+TARGET_NAMES_PATH = BASE_PATH / "target_names.pkl"
 
 st.set_page_config(
     page_title="Random Forest Predictor",
@@ -70,15 +78,66 @@ st.markdown(
 
 @st.cache_resource
 def load_model():
-    if not MODEL_PATH.exists():
+    """โหลดไฟล์ทั้ง 4 แล้วประกอบเป็น pipeline + metadata"""
+    required_files = {
+        "rf_model": MODEL_PATH,
+        "scaler": SCALER_PATH,
+        "feature_names": FEATURE_NAMES_PATH,
+        "target_names": TARGET_NAMES_PATH,
+    }
+
+    missing = [
+        name
+        for name, path in required_files.items()
+        if not path.exists()
+    ]
+    if missing:
         raise FileNotFoundError(
-            f"ไม่พบไฟล์ {MODEL_PATH.name} "
-            "กรุณาวางไฟล์โมเดลไว้ในโฟลเดอร์เดียวกับ app.py"
+            f"ไม่พบไฟล์: {', '.join(missing)} "
+            "กรุณาวางไฟล์ทั้งหมดไว้ในโฟลเดอร์เดียวกับ app.py"
         )
 
-    # โหลดเฉพาะไฟล์ .pkl ที่สร้างจากแหล่งที่เชื่อถือได้
-    with open(MODEL_PATH, "rb") as file:
-        return pickle.load(file)
+    with open(MODEL_PATH, "rb") as f:
+        model = pickle.load(f)
+
+    with open(SCALER_PATH, "rb") as f:
+        scaler = pickle.load(f)
+
+    with open(FEATURE_NAMES_PATH, "rb") as f:
+        feature_columns = pickle.load(f)
+
+    with open(TARGET_NAMES_PATH, "rb") as f:
+        class_names = pickle.load(f)
+
+    # แยก numeric (4 ตัวแรก) / categorical (2 ตัวหลัง)
+    numeric_features = feature_columns[:4]
+    categorical_features = feature_columns[4:]
+
+    # ประกอบ ColumnTransformer ใช้ scaler ที่มีอยู่แล้ว
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", scaler, numeric_features),
+            (
+                "cat",
+                OneHotEncoder(handle_unknown="ignore"),
+                categorical_features,
+            ),
+        ],
+        remainder="drop",
+    )
+
+    pipeline = Pipeline([
+        ("preprocessor", preprocessor),
+        ("classifier", model),
+    ])
+
+    metadata = {
+        "metrics": {"accuracy": 0.0, "roc_auc": 0.0},
+        "feature_columns": feature_columns,
+        "class_names": class_names,
+    }
+
+    return {"pipeline": pipeline, "metadata": metadata}
 
 
 try:
