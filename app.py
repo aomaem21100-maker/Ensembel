@@ -10,10 +10,10 @@ from sklearn.preprocessing import OneHotEncoder
 
 BASE_PATH = Path(__file__).parent
 
-MODEL_PATH = BASE_PATH / "rf_model"
-SCALER_PATH = BASE_PATH / "scaler"
-FEATURE_NAMES_PATH = BASE_PATH / "feature_names"
-TARGET_NAMES_PATH = BASE_PATH / "target_names"
+MODEL_PATH = BASE_PATH / "rf_model.pkl"
+SCALER_PATH = BASE_PATH / "scaler.pkl"
+FEATURE_NAMES_PATH = BASE_PATH / "feature_names.pkl"
+TARGET_NAMES_PATH = BASE_PATH / "target_names.pkl"
 
 st.set_page_config(
     page_title="Random Forest Predictor",
@@ -79,21 +79,21 @@ st.markdown(
 @st.cache_resource
 def load_model():
     """โหลดไฟล์ทั้ง 4 แล้วประกอบเป็น pipeline + metadata"""
-    required_files = {
-        "rf_model": MODEL_PATH,
-        "scaler": SCALER_PATH,
-        "feature_names": FEATURE_NAMES_PATH,
-        "target_names": TARGET_NAMES_PATH,
-    }
-
-    missing = [
-        name
-        for name, path in required_files.items()
-        if not path.exists()
-    ]
-    if missing:
+    
+    # ตรวจสอบว่ามีไฟล์ครบหรือไม่
+    missing_files = []
+    if not MODEL_PATH.exists():
+        missing_files.append("rf_model.pkl")
+    if not SCALER_PATH.exists():
+        missing_files.append("scaler.pkl")
+    if not FEATURE_NAMES_PATH.exists():
+        missing_files.append("feature_names.pkl")
+    if not TARGET_NAMES_PATH.exists():
+        missing_files.append("target_names.pkl")
+    
+    if missing_files:
         raise FileNotFoundError(
-            f"ไม่พบไฟล์: {', '.join(missing)} "
+            f"ไม่พบไฟล์: {', '.join(missing_files)} "
             "กรุณาวางไฟล์ทั้งหมดไว้ในโฟลเดอร์เดียวกับ app.py"
         )
 
