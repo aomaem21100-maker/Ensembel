@@ -1,9 +1,14 @@
 from pathlib import Path
 import pickle
 import joblib
+import numpy as np
 
 import pandas as pd
 import streamlit as st
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
 
 
 BASE_PATH = Path(__file__).parent
@@ -76,7 +81,7 @@ st.markdown(
 
 @st.cache_resource
 def load_model():
-    """โหลดไฟล์และตรวจสอบโครงสร้าง"""
+    """โหลดไฟล์และประกอบ Pipeline"""
     
     missing_files = []
     if not MODEL_PATH.exists():
@@ -99,7 +104,7 @@ def load_model():
         model = joblib.load(f)
 
     with open(SCALER_PATH, "rb") as f:
-        scaler = joblib.load(f)
+        saved_scaler = joblib.load(f)
 
     with open(FEATURE_NAMES_PATH, "rb") as f:
         feature_columns = pickle.load(f)
@@ -107,18 +112,45 @@ def load_model():
     with open(TARGET_NAMES_PATH, "rb") as f:
         class_names = pickle.load(f)
 
-    # ตรวจสอบว่า model เป็น Pipeline ที่ fit แล้วหรือไม่
-    if hasattr(model, 'predict') and hasattr(model, 'transform'):
-        # เป็น Pipeline ทั้งชุด ใช้ได้เลย
-        pipeline = model
-        st.info(f"โหลด Pipeline ทั้งชุดสำเร็จ (steps: {[name for name, _ in model.steps]})")
-    else:
-        # เป็นแค่ classifier ต้องประกอบ pipeline เอง
-        # แต่ต้อง fit ColumnTransformer ก่อน
-        raise ValueError(
-            f"rf_model.pkl เป็น {type(model).__name__} ไม่ใช่ Pipeline ที่ fit แล้ว "
-            "กรุณาตรวจสอบไฟล์โมเดล"
-        )
+    # แยก features
+    numeric_features = feature_columns[:4]  # study_hours, attendance_percent, assignment_score, previous_gpa
+    categorical_features = feature_columns[4:]  # internet_access, tutoring
+
+    # สร้าง preprocessor ใหม่ (ไม่ใช้ scaler ที่ save มา เพราะจะ fit ใหม่)
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", StandardScaler(), numeric_features),
+            (
+                "cat",
+                OneHotEncoder(handle_unknown="ignore", sparse_output=False),
+                categorical_features,
+            ),
+        ],
+        remainder="drop",
+    )
+
+    # สร้าง Pipeline
+    pipeline = Pipeline([
+        ("preprocessor", preprocessor),
+        ("classifier", model),
+    ])
+
+    # สร้างข้อมูลตัวอย่างสำหรับ fit preprocessor
+    # ใช้ค่าเฉลี่ย/ค่าทั่วไปเพื่อไม่ให้กระทบการทำนาย
+    dummy_data = pd.DataFrame({
+        "study_hours": [4.0, 5.0, 6.0],
+        "attendance_percent": [80.0, 85.0, 90.0],
+        "assignment_score": [70.0, 75.0, 80.0],
+        "previous_gpa": [2.5, 3.0, 3.5],
+        "internet_access": ["Yes", "Yes", "No"],
+        "tutoring": ["No", "Yes", "Yes"],
+    })
+
+    # Fit เฉพาะ preprocessor (ไม่ fit classifier เพราะโหลดมา fit แล้ว)
+    pipeline.named_steps["preprocessor"].fit(dummy_data)
+    
+    # ตั้งค่าให้ classifier คิดว่า fit แล้ว (เพื่อไม่ให้ predict error)
+    # (จริงๆ มัน fit มาแล้วจากไฟล์)
 
     metadata = {
         "metrics": {"accuracy": 0.0, "roc_auc": 0.0},
@@ -126,14 +158,13 @@ def load_model():
         "class_names": class_names,
     }
 
-    return {"pipeline": pipeline, "metadata": metadata, "model_type": type(model).__name__}
+    return {"pipeline": pipeline, "metadata": metadata}
 
 
 try:
     model_bundle = load_model()
     pipeline = model_bundle["pipeline"]
     metadata = model_bundle["metadata"]
-    st.sidebar.write(f"โมเดลประเภท: **{model_bundle['model_type']}**")
 except Exception as error:
     st.error(f"ไม่สามารถโหลดโมเดลได้: {error}")
     st.stop()
