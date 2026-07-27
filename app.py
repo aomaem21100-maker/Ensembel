@@ -189,7 +189,7 @@ except Exception as error:
 st.markdown(
     """
     <div class="hero">
-        <h1>🌸 Iris Flower Classifier</h1>
+        <h1>🌸 Random Forest Predictor</h1>
         <p>ระบบจำแนกพันธุ์ดอกไอริสอัจฉริยะด้วย Machine Learning</p>
     </div>
     """,
