@@ -1,5 +1,6 @@
 from pathlib import Path
 import pickle
+import joblib  # เพิ่ม joblib สำหรับโหลดโมเดล scikit-learn
 
 import pandas as pd
 import streamlit as st
@@ -17,7 +18,7 @@ TARGET_NAMES_PATH = BASE_PATH / "target_names.pkl"
 
 st.set_page_config(
     page_title="Random Forest Predictor",
-    page_icon="🌱",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -97,12 +98,14 @@ def load_model():
             "กรุณาวางไฟล์ทั้งหมดไว้ในโฟลเดอร์เดียวกับ app.py"
         )
 
+    # ใช้ joblib โหลดโมเดลและ scaler (เพราะ scikit-learn นิยมใช้ joblib)
     with open(MODEL_PATH, "rb") as f:
-        model = pickle.load(f)
+        model = joblib.load(f)
 
     with open(SCALER_PATH, "rb") as f:
-        scaler = pickle.load(f)
+        scaler = joblib.load(f)
 
+    # ใช้ pickle โหลด list ชื่อ features และ target (ปกติ save ด้วย pickle)
     with open(FEATURE_NAMES_PATH, "rb") as f:
         feature_columns = pickle.load(f)
 
