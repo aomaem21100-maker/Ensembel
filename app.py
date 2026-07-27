@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 
-MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
+MODEL_PATH = Path(__file__).with_name("rf_model.pkl")
 
 st.set_page_config(
     page_title="Random Forest Predictor",
