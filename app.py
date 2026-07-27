@@ -1,25 +1,19 @@
 from pathlib import Path
 import pickle
 import joblib
-import numpy as np
 
 import pandas as pd
 import streamlit as st
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
 
 
 BASE_PATH = Path(__file__).parent
 
 MODEL_PATH = BASE_PATH / "rf_model.pkl"
-SCALER_PATH = BASE_PATH / "scaler.pkl"
 FEATURE_NAMES_PATH = BASE_PATH / "feature_names.pkl"
 TARGET_NAMES_PATH = BASE_PATH / "target_names.pkl"
 
 st.set_page_config(
-    page_title="Random Forest Predictor",
+    page_title="Iris Flower Classifier",
     page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -40,7 +34,7 @@ st.markdown(
             border: 1px solid rgba(128, 128, 128, 0.22);
             background: linear-gradient(
                 135deg,
-                rgba(56, 142, 60, 0.09),
+                rgba(200, 100, 150, 0.09),
                 rgba(255, 255, 255, 0.02)
             );
             margin-bottom: 1.2rem;
@@ -81,13 +75,11 @@ st.markdown(
 
 @st.cache_resource
 def load_model():
-    """โหลดไฟล์และประกอบ Pipeline"""
+    """โหลดโมเดลและ metadata"""
     
     missing_files = []
     if not MODEL_PATH.exists():
         missing_files.append("rf_model.pkl")
-    if not SCALER_PATH.exists():
-        missing_files.append("scaler.pkl")
     if not FEATURE_NAMES_PATH.exists():
         missing_files.append("feature_names.pkl")
     if not TARGET_NAMES_PATH.exists():
@@ -99,12 +91,8 @@ def load_model():
             "กรุณาวางไฟล์ทั้งหมดไว้ในโฟลเดอร์เดียวกับ app.py"
         )
 
-    # โหลดไฟล์ทั้งหมด
     with open(MODEL_PATH, "rb") as f:
         model = joblib.load(f)
-
-    with open(SCALER_PATH, "rb") as f:
-        saved_scaler = joblib.load(f)
 
     with open(FEATURE_NAMES_PATH, "rb") as f:
         feature_columns = pickle.load(f)
@@ -112,59 +100,21 @@ def load_model():
     with open(TARGET_NAMES_PATH, "rb") as f:
         class_names = pickle.load(f)
 
-    # แยก features
-    numeric_features = feature_columns[:4]  # study_hours, attendance_percent, assignment_score, previous_gpa
-    categorical_features = feature_columns[4:]  # internet_access, tutoring
-
-    # สร้าง preprocessor ใหม่ (ไม่ใช้ scaler ที่ save มา เพราะจะ fit ใหม่)
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", StandardScaler(), numeric_features),
-            (
-                "cat",
-                OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-                categorical_features,
-            ),
-        ],
-        remainder="drop",
-    )
-
-    # สร้าง Pipeline
-    pipeline = Pipeline([
-        ("preprocessor", preprocessor),
-        ("classifier", model),
-    ])
-
-    # สร้างข้อมูลตัวอย่างสำหรับ fit preprocessor
-    # ใช้ค่าเฉลี่ย/ค่าทั่วไปเพื่อไม่ให้กระทบการทำนาย
-    dummy_data = pd.DataFrame({
-        "study_hours": [4.0, 5.0, 6.0],
-        "attendance_percent": [80.0, 85.0, 90.0],
-        "assignment_score": [70.0, 75.0, 80.0],
-        "previous_gpa": [2.5, 3.0, 3.5],
-        "internet_access": ["Yes", "Yes", "No"],
-        "tutoring": ["No", "Yes", "Yes"],
-    })
-
-    # Fit เฉพาะ preprocessor (ไม่ fit classifier เพราะโหลดมา fit แล้ว)
-    pipeline.named_steps["preprocessor"].fit(dummy_data)
-    
-    # ตั้งค่าให้ classifier คิดว่า fit แล้ว (เพื่อไม่ให้ predict error)
-    # (จริงๆ มัน fit มาแล้วจากไฟล์)
-
     metadata = {
         "metrics": {"accuracy": 0.0, "roc_auc": 0.0},
         "feature_columns": feature_columns,
         "class_names": class_names,
     }
 
-    return {"pipeline": pipeline, "metadata": metadata}
+    return {"model": model, "metadata": metadata}
 
 
 try:
     model_bundle = load_model()
-    pipeline = model_bundle["pipeline"]
+    model = model_bundle["model"]
     metadata = model_bundle["metadata"]
+    feature_columns = metadata["feature_columns"]
+    class_names = metadata["class_names"]
 except Exception as error:
     st.error(f"ไม่สามารถโหลดโมเดลได้: {error}")
     st.stop()
@@ -173,10 +123,10 @@ except Exception as error:
 st.markdown(
     """
     <div class="hero">
-        <h1> Random Forest Predictor</h1>
+        <h1>🌸 Iris Flower Classifier</h1>
         <p>
-            เว็บตัวอย่างสำหรับทำนายแนวโน้มการสอบผ่าน
-            ด้วย Ensemble Learning และ Data Preprocessing Pipeline
+            ระบบจำแนกพันธุ์ดอกไอริสด้วย Random Forest
+            ใช้ข้อมูลความยาวและความกว้างของกลีบดอกและกลีบเลี้ยง
         </p>
     </div>
     """,
@@ -187,27 +137,18 @@ with st.sidebar:
     st.header("ข้อมูลโมเดล")
     st.write("อัลกอริทึม: **Random Forest**")
     st.write("ประเภทงาน: **Classification**")
-
-    model_metrics = metadata.get("metrics", {})
-    st.metric(
-        "Test Accuracy",
-        f"{model_metrics.get('accuracy', 0):.2%}",
-    )
-    st.metric(
-        "Test ROC-AUC",
-        f"{model_metrics.get('roc_auc', 0):.3f}",
-    )
+    st.write("จำนวนคลาส: **3** (Setosa, Versicolor, Virginica)")
 
     st.divider()
     st.caption(
         "โมเดลและข้อมูลนี้จัดทำเพื่อเป็นตัวอย่างการเรียนรู้ "
-        "ไม่ควรใช้ตัดสินนักเรียนจริงโดยไม่มีการตรวจสอบเพิ่มเติม"
+        "ไม่ควรใช้ตัดสินจริงโดยไม่มีการตรวจสอบเพิ่มเติม"
     )
 
 
 single_tab, batch_tab, process_tab = st.tabs(
     [
-        "ทำนายรายบุคคล",
+        "ทำนายรายดอก",
         "ทำนายจาก CSV",
         "ขั้นตอนของโมเดล",
     ]
@@ -215,61 +156,47 @@ single_tab, batch_tab, process_tab = st.tabs(
 
 
 with single_tab:
-    st.subheader("กรอกข้อมูลสำหรับการทำนาย")
+    st.subheader("กรอกข้อมูลดอกไอริส")
 
     with st.form("single_prediction_form"):
         left_column, right_column = st.columns(2)
 
         with left_column:
-            study_hours = st.number_input(
-                "ชั่วโมงอ่านหนังสือต่อวัน",
+            sepal_length = st.number_input(
+                "ความยาวกลีบเลี้ยง (cm)",
                 min_value=0.0,
-                max_value=12.0,
-                value=4.0,
-                step=0.5,
+                max_value=10.0,
+                value=5.1,
+                step=0.1,
             )
 
-            attendance_percent = st.number_input(
-                "เปอร์เซ็นต์การเข้าเรียน",
+            sepal_width = st.number_input(
+                "ความกว้างกลีบเลี้ยง (cm)",
                 min_value=0.0,
-                max_value=100.0,
-                value=85.0,
-                step=1.0,
-            )
-
-            assignment_score = st.number_input(
-                "คะแนนงานหรือการบ้าน",
-                min_value=0.0,
-                max_value=100.0,
-                value=75.0,
-                step=1.0,
+                max_value=10.0,
+                value=3.5,
+                step=0.1,
             )
 
         with right_column:
-            previous_gpa = st.number_input(
-                "เกรดเฉลี่ยเดิม",
+            petal_length = st.number_input(
+                "ความยาวกลีบดอก (cm)",
                 min_value=0.0,
-                max_value=4.0,
-                value=2.75,
-                step=0.05,
+                max_value=10.0,
+                value=1.4,
+                step=0.1,
             )
 
-            internet_access = st.selectbox(
-                "มีอินเทอร์เน็ตสำหรับการเรียนหรือไม่",
-                options=["Yes", "No"],
-                format_func=lambda value: "มี" if value == "Yes" else "ไม่มี",
-            )
-
-            tutoring = st.selectbox(
-                "เข้าร่วมการสอนเสริมหรือไม่",
-                options=["Yes", "No"],
-                format_func=lambda value: (
-                    "เข้าร่วม" if value == "Yes" else "ไม่เข้าร่วม"
-                ),
+            petal_width = st.number_input(
+                "ความกว้างกลีบดอก (cm)",
+                min_value=0.0,
+                max_value=10.0,
+                value=0.2,
+                step=0.1,
             )
 
         predict_button = st.form_submit_button(
-            "ทำนายผล",
+            "ทำนายพันธุ์",
             type="primary",
             use_container_width=True,
         )
@@ -277,48 +204,37 @@ with single_tab:
     if predict_button:
         input_data = pd.DataFrame(
             [{
-                "study_hours": study_hours,
-                "attendance_percent": attendance_percent,
-                "assignment_score": assignment_score,
-                "previous_gpa": previous_gpa,
-                "internet_access": internet_access,
-                "tutoring": tutoring,
+                "sepal length (cm)": sepal_length,
+                "sepal width (cm)": sepal_width,
+                "petal length (cm)": petal_length,
+                "petal width (cm)": petal_width,
             }]
         )
 
-        prediction = int(pipeline.predict(input_data)[0])
-        probabilities = pipeline.predict_proba(input_data)[0]
+        prediction = int(model.predict(input_data)[0])
+        probabilities = model.predict_proba(input_data)[0]
 
-        fail_probability = float(probabilities[0])
-        pass_probability = float(probabilities[1])
-        prediction_label = metadata["class_names"][prediction]
+        prediction_label = class_names[prediction]
 
         st.markdown('<div class="soft-card">', unsafe_allow_html=True)
 
-        if prediction == 1:
-            st.success(f"ผลการทำนาย: **{prediction_label}**")
-        else:
-            st.warning(f"ผลการทำนาย: **{prediction_label}**")
+        st.success(f"ผลการทำนาย: **{prediction_label}**")
 
-        metric_left, metric_right = st.columns(2)
-
-        metric_left.metric(
-            "ความน่าจะเป็นที่จะผ่าน",
-            f"{pass_probability:.1%}",
-        )
-
-        metric_right.metric(
-            "ความน่าจะเป็นที่จะไม่ผ่าน",
-            f"{fail_probability:.1%}",
-        )
-
-        st.progress(pass_probability)
+        st.subheader("ความน่าจะเป็นของแต่ละพันธุ์")
+        
+        for i, class_name in enumerate(class_names):
+            prob = float(probabilities[i])
+            st.metric(
+                class_name,
+                f"{prob:.1%}",
+            )
+            st.progress(prob)
 
         st.markdown(
             """
             <p class="small-note">
-                ข้อมูลจะผ่านขั้นตอนเติมค่าที่หาย ปรับมาตรฐาน
-                และแปลงข้อมูลหมวดหมู่โดยอัตโนมัติก่อนเข้าสู่ Random Forest
+                ข้อมูลจะถูกส่งเข้าสู่ Random Forest โดยตรง
+                เพื่อจำแนกพันธุ์ดอกไอริส
             </p>
             """,
             unsafe_allow_html=True,
@@ -332,19 +248,17 @@ with batch_tab:
 
     csv_template = pd.DataFrame(
         [{
-            "study_hours": 4.0,
-            "attendance_percent": 85.0,
-            "assignment_score": 75.0,
-            "previous_gpa": 2.75,
-            "internet_access": "Yes",
-            "tutoring": "No",
+            "sepal length (cm)": 5.1,
+            "sepal width (cm)": 3.5,
+            "petal length (cm)": 1.4,
+            "petal width (cm)": 0.2,
         }]
     )
 
     st.download_button(
         label="ดาวน์โหลดไฟล์ CSV ตัวอย่าง",
         data=csv_template.to_csv(index=False).encode("utf-8-sig"),
-        file_name="prediction_template.csv",
+        file_name="iris_prediction_template.csv",
         mime="text/csv",
     )
 
@@ -358,7 +272,7 @@ with batch_tab:
         try:
             batch_data = pd.read_csv(uploaded_file)
 
-            required_columns = metadata["feature_columns"]
+            required_columns = feature_columns
             missing_columns = [
                 column
                 for column in required_columns
@@ -373,16 +287,18 @@ with batch_tab:
             else:
                 model_input = batch_data[required_columns].copy()
 
-                batch_predictions = pipeline.predict(model_input)
-                batch_probabilities = pipeline.predict_proba(model_input)[:, 1]
+                batch_predictions = model.predict(model_input)
+                batch_probabilities = model.predict_proba(model_input)
 
                 result_data = batch_data.copy()
                 result_data["prediction"] = batch_predictions
                 result_data["prediction_label"] = [
-                    metadata["class_names"][int(value)]
+                    class_names[int(value)]
                     for value in batch_predictions
                 ]
-                result_data["pass_probability"] = batch_probabilities.round(4)
+
+                for i, class_name in enumerate(class_names):
+                    result_data[f"prob_{class_name}"] = batch_probabilities[:, i].round(4)
 
                 st.success(
                     f"ทำนายสำเร็จทั้งหมด {len(result_data):,} รายการ"
@@ -397,7 +313,7 @@ with batch_tab:
                 st.download_button(
                     label="ดาวน์โหลดผลการทำนาย",
                     data=result_data.to_csv(index=False).encode("utf-8-sig"),
-                    file_name="random_forest_predictions.csv",
+                    file_name="iris_predictions.csv",
                     mime="text/csv",
                     type="primary",
                 )
@@ -411,31 +327,26 @@ with process_tab:
 
     st.markdown(
         """
-        **1. Numeric Data Preprocessing**
+        **1. Input Features**
 
-        - เติมค่าที่หายด้วยค่ามัธยฐาน
-        - Transform ด้วย StandardScaler
+        - ความยาวกลีบเลี้ยง (sepal length)
+        - ความกว้างกลีบเลี้ยง (sepal width)
+        - ความยาวกลีบดอก (petal length)
+        - ความกว้างกลีบดอก (petal width)
 
-        **2. Categorical Data Preprocessing**
+        **2. Prediction**
 
-        - เติมค่าที่หายด้วยค่าที่พบบ่อยที่สุด
-        - Transform ด้วย One-Hot Encoding
-
-        **3. Prediction**
-
-        - ส่งข้อมูลที่แปลงแล้วเข้าสู่ Random Forest
-        - แสดงคลาสที่ทำนายและค่าความน่าจะเป็น
+        - ส่งข้อมูลเข้าสู่ Random Forest
+        - แสดงพันธุ์ที่ทำนายและค่าความน่าจะเป็นของแต่ละพันธุ์
         """
     )
 
     schema = pd.DataFrame(
         [
-            ["study_hours", "ตัวเลข", "ชั่วโมงอ่านหนังสือต่อวัน"],
-            ["attendance_percent", "ตัวเลข", "เปอร์เซ็นต์การเข้าเรียน"],
-            ["assignment_score", "ตัวเลข", "คะแนนงานหรือการบ้าน"],
-            ["previous_gpa", "ตัวเลข", "เกรดเฉลี่ยเดิม 0–4"],
-            ["internet_access", "หมวดหมู่", "Yes หรือ No"],
-            ["tutoring", "หมวดหมู่", "Yes หรือ No"],
+            ["sepal length (cm)", "ตัวเลข", "ความยาวกลีบเลี้ยง (ซม.)"],
+            ["sepal width (cm)", "ตัวเลข", "ความกว้างกลีบเลี้ยง (ซม.)"],
+            ["petal length (cm)", "ตัวเลข", "ความยาวกลีบดอก (ซม.)"],
+            ["petal width (cm)", "ตัวเลข", "ความกว้างกลีบดอก (ซม.)"],
         ],
         columns=["ชื่อคอลัมน์", "ชนิดข้อมูล", "คำอธิบาย"],
     )
@@ -445,3 +356,9 @@ with process_tab:
         use_container_width=True,
         hide_index=True,
     )
+
+    st.markdown("---")
+    st.markdown("### พันธุ์ดอกไอริส")
+    
+    for class_name in class_names:
+        st.write(f"- **{class_name}**")
