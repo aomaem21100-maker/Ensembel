@@ -10,10 +10,10 @@ from sklearn.preprocessing import OneHotEncoder
 
 BASE_PATH = Path(__file__).parent
 
-MODEL_PATH = BASE_PATH / "rf_model.pkl"
-SCALER_PATH = BASE_PATH / "scaler.pkl"
-FEATURE_NAMES_PATH = BASE_PATH / "feature_names.pkl"
-TARGET_NAMES_PATH = BASE_PATH / "target_names.pkl"
+MODEL_PATH = BASE_PATH / "rf_model"
+SCALER_PATH = BASE_PATH / "scaler"
+FEATURE_NAMES_PATH = BASE_PATH / "feature_names"
+TARGET_NAMES_PATH = BASE_PATH / "target_names"
 
 st.set_page_config(
     page_title="Random Forest Predictor",
@@ -152,7 +152,7 @@ except Exception as error:
 st.markdown(
     """
     <div class="hero">
-        <h1>🌱 Random Forest Predictor</h1>
+        <h1> Random Forest Predictor</h1>
         <p>
             เว็บตัวอย่างสำหรับทำนายแนวโน้มการสอบผ่าน
             ด้วย Ensemble Learning และ Data Preprocessing Pipeline
