@@ -12,11 +12,8 @@ MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
 DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานนท์"
 DEVELOPER_ID = "024"
 
-# ✅ ใช้ URL จากอินเทอร์เน็ต (ปลอดภัย ไม่ error)
-DEVELOPER_IMAGE = "https://ui-avatars.com/api/?name=Jaturapat+Sthapik&size=300&background=388E3C&color=fff&bold=true"
 
-# ถ้าอยากใช้รูปตัวเอง ให้เปลี่ยนเป็น URL รูปออนไลน์ เช่น:
-# DEVELOPER_IMAGE = "https://your-image-hosting.com/15.jpg"
+DEVELOPER_IMAGE = "image/15.jpg"
 
 
 st.set_page_config(
