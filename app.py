@@ -492,13 +492,11 @@ st.divider()
 
 st.markdown(
     f"""
-    <div class="footer-developer">
-        <div class="footer-developer-row">
-            <div>
-                <img src="{DEVELOPER_IMAGE}"
-                     class="developer-avatar"
-                     onerror="this.src='image/024.jpg'">
-            </div>
+    <div class="developer-sidebar-card">
+        <p class="developer-name">{DEVELOPER_NAME}</p>
+        <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
+        <p class="developer-role">ML with Python Developer</p>
+    </div>
             <div class="footer-developer-text">
                 <h3>👨‍💻 พัฒนาโดย</h3>
                 <p class="developer-name">{DEVELOPER_NAME}</p>
