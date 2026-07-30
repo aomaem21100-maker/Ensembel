@@ -497,14 +497,7 @@ st.markdown(
         <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
         <p class="developer-role">ML with Python Developer</p>
     </div>
-            <div class="footer-developer-text">
-                <h3>👨‍💻 พัฒนาโดย</h3>
-                <p class="developer-name">{DEVELOPER_NAME}</p>
-                <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
-                <p class="developer-role">
-                    📚 วิชา: การโปรแกรมสำหรับการเรียนรู้ด้วยเครื่องด้วยภาษาไพทอน
-                </p>
-            </div>
+            
         </div>
         <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid rgba(128,128,128,0.25);">
         <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">
