@@ -492,16 +492,20 @@ st.divider()
 
 st.markdown(
     f"""
-    <div class="developer-sidebar-card">
-        <p class="developer-name">{DEVELOPER_NAME}</p>
-        <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
-        <p class="developer-role">ML with Python Developer</p>
-    </div>
-            
+    <div class="footer-developer">
+        <div class="footer-developer-row">
+            <div class="footer-developer-text" style="text-align: center; width: 100%;">
+                <h3 style="color: #2E7D32; margin: 0 0 0.5rem 0;">👨‍💻 พัฒนาโดย</h3>
+                <p class="developer-name" style="font-size: 1.4rem; margin: 0.3rem 0;">{DEVELOPER_NAME}</p>
+                <p class="developer-id" style="font-size: 1.1rem; margin: 0.3rem 0;">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
+                <p class="developer-role" style="margin: 0.3rem 0;">
+                     วิชา: การโปรแกรมสำหรับการเรียนรู้ด้วยเครื่องด้วยภาษาไพทอน
+                </p>
+            </div>
         </div>
         <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid rgba(128,128,128,0.25);">
         <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">
-            📅 กรกฎาคม 2026 | ️ Built with <b>Streamlit</b> + <b>scikit-learn</b> + <b>Pandas</b>
+            📅 กรกฎาคม 2026 | 🛠️ Built with <b>Streamlit</b> + <b>scikit-learn</b> + <b>Pandas</b>
         </p>
     </div>
     """,
