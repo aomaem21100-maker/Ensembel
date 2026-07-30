@@ -13,7 +13,7 @@ DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานน�
 DEVELOPER_ID = "024"
 
 
-DEVELOPER_IMAGE = "image/15.jpg"
+DEVELOPER_IMAGE = "image/15"
 
 
 st.set_page_config(
