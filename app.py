@@ -500,7 +500,7 @@ st.markdown(
             <div>
                 <img src="{DEVELOPER_IMAGE}"
                      class="developer-avatar"
-                     onerror="this.src='https://ui-avatars.com/api/?name=Jaturapat+Sthapik&size=150&background=388E3C&color=fff&bold=true'">
+                     onerror="this.src='image/15.jpg'">
             </div>
             <div class="footer-developer-text">
                 <h3>👨‍💻 พัฒนาโดย</h3>
