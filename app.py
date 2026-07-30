@@ -1,11 +1,33 @@
 from pathlib import Path
 import pickle
+import os
 
 import pandas as pd
 import streamlit as st
 
 
 MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
+
+# ==================== Developer Info ====================
+DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานนท์"
+DEVELOPER_ID = "024"
+# 📌 วางรูปชื่อ "developer.jpg" ไว้ในโฟลเดอร์เดียวกับไฟล์นี้
+# หรือเปลี่ยนเป็น URL รูปที่ต้องการ เช่น "https://..."
+DEVELOPER_IMAGE = "developer.jpg"
+
+# สร้าง URL placeholder สำหรับ avatar (กรณีไม่มีไฟล์รูป)
+PLACEHOLDER_AVATAR = (
+    "https://ui-avatars.com/api/"
+    "?name=Jaturapat+Sthapik&size=150&background=388E3C&color=fff&bold=true"
+)
+
+
+def get_developer_image_url() -> str:
+    """คืนค่า URL ของรูปผู้พัฒนา (ใช้รูปจริงถ้ามี หรือ placeholder ถ้าไม่มี)"""
+    if os.path.exists(DEVELOPER_IMAGE):
+        return DEVELOPER_IMAGE
+    return PLACEHOLDER_AVATAR
+
 
 st.set_page_config(
     page_title="Random Forest Predictor",
@@ -62,6 +84,91 @@ st.markdown(
             font-size: 0.9rem;
             opacity: 0.70;
         }
+
+        /* ===== Developer Card Styles ===== */
+        .developer-sidebar-card {
+            background: linear-gradient(
+                135deg,
+                rgba(56, 142, 60, 0.12),
+                rgba(255, 255, 255, 0.02)
+            );
+            border: 1px solid rgba(56, 142, 60, 0.25);
+            border-radius: 16px;
+            padding: 1.2rem;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .developer-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #388E3C;
+            box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3);
+            margin-bottom: 0.8rem;
+        }
+
+        .developer-name {
+            color: #2E7D32;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0.3rem 0;
+        }
+
+        .developer-id {
+            color: #388E3C;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 0.2rem 0;
+        }
+
+        .developer-role {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin: 0.2rem 0;
+        }
+
+        .footer-developer {
+            background: linear-gradient(
+                135deg,
+                rgba(56, 142, 60, 0.08),
+                rgba(255, 255, 255, 0.02)
+            );
+            border: 1px solid rgba(128, 128, 128, 0.22);
+            padding: 1.8rem;
+            border-radius: 18px;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .footer-developer-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.8rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-developer-text {
+            text-align: left;
+        }
+
+        .footer-developer-text h3 {
+            color: #2E7D32;
+            margin: 0 0 0.4rem 0;
+        }
+
+        .footer-developer-text .developer-name {
+            font-size: 1.3rem;
+            margin: 0.3rem 0;
+        }
+
+        .footer-developer-text .developer-id {
+            font-size: 1rem;
+            margin: 0.3rem 0;
+        }
     </style>
     """,
     unsafe_allow_html=True,
@@ -103,6 +210,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# ==================== Sidebar with Developer Info ====================
 with st.sidebar:
     st.header("ข้อมูลโมเดล")
     st.write("อัลกอริทึม: **Random Forest**")
@@ -116,6 +224,25 @@ with st.sidebar:
     st.metric(
         "Test ROC-AUC",
         f"{model_metrics.get('roc_auc', 0):.3f}",
+    )
+
+    st.divider()
+
+    # ===== Developer Profile in Sidebar =====
+    st.markdown("### 👨‍💻 ผู้พัฒนา")
+
+    developer_image_url = get_developer_image_url()
+    st.image(developer_image_url, width=130)
+
+    st.markdown(
+        f"""
+        <div class="developer-sidebar-card">
+            <p class="developer-name">{DEVELOPER_NAME}</p>
+            <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
+            <p class="developer-role">ML with Python Developer</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     st.divider()
@@ -365,3 +492,36 @@ with process_tab:
         use_container_width=True,
         hide_index=True,
     )
+
+
+# ==================== Footer with Developer Info ====================
+st.divider()
+
+footer_image_url = get_developer_image_url()
+
+st.markdown(
+    f"""
+    <div class="footer-developer">
+        <div class="footer-developer-row">
+            <div>
+                <img src="{footer_image_url}"
+                     class="developer-avatar"
+                     onerror="this.src='{PLACEHOLDER_AVATAR}'">
+            </div>
+            <div class="footer-developer-text">
+                <h3>👨‍💻 พัฒนาโดย</h3>
+                <p class="developer-name">{DEVELOPER_NAME}</p>
+                <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
+                <p class="developer-role">
+                    📚 วิชา: การโปรแกรมสำหรับการเรียนรู้ด้วยเครื่องด้วยภาษาไพทอน
+                </p>
+            </div>
+        </div>
+        <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid rgba(128,128,128,0.25);">
+        <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">
+            📅 กรกฎาคม 2026 | 🛠️ Built with <b>Streamlit</b> + <b>scikit-learn</b> + <b>Pandas</b>
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
