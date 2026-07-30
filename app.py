@@ -12,20 +12,11 @@ MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
 DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานนท์"
 DEVELOPER_ID = "024"
 
-DEVELOPER_IMAGE = "image/15.jpg"
+# ✅ ใช้ URL จากอินเทอร์เน็ต (ปลอดภัย ไม่ error)
+DEVELOPER_IMAGE = "https://ui-avatars.com/api/?name=Jaturapat+Sthapik&size=300&background=388E3C&color=fff&bold=true"
 
-# สร้าง URL placeholder สำหรับ avatar (กรณีไม่มีไฟล์รูป 15.jpg)
-PLACEHOLDER_AVATAR = (
-    "https://ui-avatars.com/api/"
-    "?name=Jaturapat+Sthapik&size=150&background=388E3C&color=fff&bold=true"
-)
-
-
-def get_developer_image_url() -> str:
-    """คืนค่า URL ของรูปผู้พัฒนา (ใช้รูปจริงถ้ามี หรือ placeholder ถ้าไม่มี)"""
-    if os.path.exists(DEVELOPER_IMAGE):
-        return DEVELOPER_IMAGE
-    return PLACEHOLDER_AVATAR
+# ถ้าอยากใช้รูปตัวเอง ให้เปลี่ยนเป็น URL รูปออนไลน์ เช่น:
+# DEVELOPER_IMAGE = "https://your-image-hosting.com/15.jpg"
 
 
 st.set_page_config(
@@ -182,7 +173,6 @@ def load_model():
             "กรุณาวางไฟล์โมเดลไว้ในโฟลเดอร์เดียวกับ app.py"
         )
 
-    # โหลดเฉพาะไฟล์ .pkl ที่สร้างจากแหล่งที่เชื่อถือได้
     with open(MODEL_PATH, "rb") as file:
         return pickle.load(file)
 
@@ -199,7 +189,7 @@ except Exception as error:
 st.markdown(
     """
     <div class="hero">
-        <h1>🌱 Random Forest Predictor</h1>
+        <h1> Random Forest Predictor</h1>
         <p>
             เว็บตัวอย่างสำหรับทำนายแนวโน้มการสอบผ่าน
             ด้วย Ensemble Learning และ Data Preprocessing Pipeline
@@ -230,8 +220,15 @@ with st.sidebar:
     # ===== Developer Profile in Sidebar =====
     st.markdown("### 👨‍💻 ผู้พัฒนา")
 
-    developer_image_url = get_developer_image_url()
-    st.image(developer_image_url, width=130)
+    # ✅ ใช้ try-except เพื่อป้องกัน error
+    try:
+        st.image(DEVELOPER_IMAGE, width=130)
+    except Exception:
+        # ถ้ารูปมีปัญหา ให้ใช้ placeholder แทน
+        st.image(
+            "https://ui-avatars.com/api/?name=Jaturapat+Sthapik&size=150&background=388E3C&color=fff&bold=true",
+            width=130
+        )
 
     st.markdown(
         f"""
@@ -496,16 +493,14 @@ with process_tab:
 # ==================== Footer with Developer Info ====================
 st.divider()
 
-footer_image_url = get_developer_image_url()
-
 st.markdown(
     f"""
     <div class="footer-developer">
         <div class="footer-developer-row">
             <div>
-                <img src="{footer_image_url}"
+                <img src="{DEVELOPER_IMAGE}"
                      class="developer-avatar"
-                     onerror="this.src='{PLACEHOLDER_AVATAR}'">
+                     onerror="this.src='https://ui-avatars.com/api/?name=Jaturapat+Sthapik&size=150&background=388E3C&color=fff&bold=true'">
             </div>
             <div class="footer-developer-text">
                 <h3>👨‍💻 พัฒนาโดย</h3>
@@ -518,7 +513,7 @@ st.markdown(
         </div>
         <hr style="margin: 1.2rem 0; border: none; border-top: 1px solid rgba(128,128,128,0.25);">
         <p style="color: #7f8c8d; margin: 0; font-size: 0.95rem;">
-            📅 กรกฎาคม 2026 | 🛠️ Built with <b>Streamlit</b> + <b>scikit-learn</b> + <b>Pandas</b>
+            📅 กรกฎาคม 2026 | ️ Built with <b>Streamlit</b> + <b>scikit-learn</b> + <b>Pandas</b>
         </p>
     </div>
     """,
