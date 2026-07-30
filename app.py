@@ -13,7 +13,7 @@ DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานน�
 DEVELOPER_ID = "024"
 
 
-DEVELOPER_IMAGE = "image/15"
+DEVELOPER_IMAGE = "image/024.jpg"
 
 
 st.set_page_config(
@@ -497,7 +497,7 @@ st.markdown(
             <div>
                 <img src="{DEVELOPER_IMAGE}"
                      class="developer-avatar"
-                     onerror="this.src='image/15.jpg'">
+                     onerror="this.src='image/024.jpg'">
             </div>
             <div class="footer-developer-text">
                 <h3>👨‍💻 พัฒนาโดย</h3>
