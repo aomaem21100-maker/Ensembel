@@ -12,7 +12,7 @@ MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
 DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานนท์"
 DEVELOPER_ID = "024"
 
-DEVELOPER_IMAGE = "15.jpg"
+DEVELOPER_IMAGE = "image/15.jpg"
 
 # สร้าง URL placeholder สำหรับ avatar (กรณีไม่มีไฟล์รูป 15.jpg)
 PLACEHOLDER_AVATAR = (
