@@ -11,11 +11,10 @@ MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
 # ==================== Developer Info ====================
 DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานนท์"
 DEVELOPER_ID = "024"
-# 📌 วางรูปชื่อ "developer.jpg" ไว้ในโฟลเดอร์เดียวกับไฟล์นี้
-# หรือเปลี่ยนเป็น URL รูปที่ต้องการ เช่น "https://..."
-DEVELOPER_IMAGE = "developer.jpg"
+# 📌 เปลี่ยนเป็นชื่อไฟล์รูปภาพที่คุณต้องการ (วางไว้ในโฟลเดอร์เดียวกับ app.py)
+DEVELOPER_IMAGE = "15.jpg"
 
-# สร้าง URL placeholder สำหรับ avatar (กรณีไม่มีไฟล์รูป)
+# สร้าง URL placeholder สำหรับ avatar (กรณีไม่มีไฟล์รูป 15.jpg)
 PLACEHOLDER_AVATAR = (
     "https://ui-avatars.com/api/"
     "?name=Jaturapat+Sthapik&size=150&background=388E3C&color=fff&bold=true"
@@ -509,7 +508,7 @@ st.markdown(
                      onerror="this.src='{PLACEHOLDER_AVATAR}'">
             </div>
             <div class="footer-developer-text">
-                <h3> พัฒนาโดย</h3>
+                <h3>👨‍💻 พัฒนาโดย</h3>
                 <p class="developer-name">{DEVELOPER_NAME}</p>
                 <p class="developer-id">🆔 รหัสนักศึกษา: {DEVELOPER_ID}</p>
                 <p class="developer-role">
@@ -524,4 +523,4 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True,
-) 
+)
