@@ -11,7 +11,7 @@ MODEL_PATH = Path(__file__).with_name("random_forest_model.pkl")
 # ==================== Developer Info ====================
 DEVELOPER_NAME = "นายจตุรภัทร สถาปิคานนท์"
 DEVELOPER_ID = "024"
-# 📌 เปลี่ยนเป็นชื่อไฟล์รูปภาพที่คุณต้องการ (วางไว้ในโฟลเดอร์เดียวกับ app.py)
+
 DEVELOPER_IMAGE = "15.jpg"
 
 # สร้าง URL placeholder สำหรับ avatar (กรณีไม่มีไฟล์รูป 15.jpg)
